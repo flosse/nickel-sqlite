@@ -1,0 +1,16 @@
+[package]
+
+name = "nickel_sqlite"
+version = "0.0.1"
+authors = ["Markus Kohlhase <mail@markus-kohlhase.de>"]
+license = "MIT"
+description = "A SQLite middleware for nickel.rs"
+repository = "https://github.com/flosse/nickel-sqlite"
+keywords = ["sqlite", "nickel", "middleware"]
+
+[dependencies]
+nickel = "*"
+r2d2 = "*"
+r2d2_sqlite = "*"
+plugin = "*"
+typemap = "*"
