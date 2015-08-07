@@ -6,6 +6,8 @@ authors = ["Markus Kohlhase <mail@markus-kohlhase.de>"]
 license = "MIT"
 description = "A SQLite middleware for nickel.rs"
 repository = "https://github.com/flosse/nickel-sqlite"
+documentation = "http://flosse.github.io/nickel-sqlite/"
+
 keywords = ["sqlite", "nickel", "middleware"]
 
 [dependencies]
