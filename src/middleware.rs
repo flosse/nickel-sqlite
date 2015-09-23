@@ -2,7 +2,7 @@ use std::sync::Arc;
 use std::error::Error as StdError;
 
 use nickel::{Request, Response, Middleware, Continue, MiddlewareResult};
-use r2d2_sqlite::{SqliteConnectionManager, Error};
+use r2d2_sqlite::{SqliteConnectionManager};
 use r2d2::{Pool, HandleError, Config, PooledConnection};
 use typemap::Key;
 use plugin::{Pluggable, Extensible};
@@ -14,7 +14,7 @@ pub struct SqliteMiddleware {
 impl SqliteMiddleware {
   pub fn new(connect_str: &str,
              num_connections: u32,
-             error_handler: Box<HandleError<Error>>)
+             error_handler: Box<HandleError<::r2d2_sqlite::Error>>)
                -> Result<SqliteMiddleware, Box<StdError>> {
       let config = Config::builder()
         .pool_size(num_connections)
@@ -28,8 +28,8 @@ impl SqliteMiddleware {
 
 impl Key for SqliteMiddleware { type Value = Arc<Pool<SqliteConnectionManager>>; }
 
-impl Middleware for SqliteMiddleware {
-  fn invoke<'a>(&self, req: &mut Request, res: Response<'a>) -> MiddlewareResult<'a> {
+impl<D> Middleware<D> for SqliteMiddleware {
+  fn invoke<'a>(&self, req: &mut Request<D>, res: Response<'a, D>) -> MiddlewareResult<'a, D> {
     req.extensions_mut().insert::<SqliteMiddleware>(self.pool.clone());
     Ok(Continue(res))
   }
@@ -39,7 +39,7 @@ pub trait SqliteRequestExtensions {
   fn db_conn(&self) -> PooledConnection<SqliteConnectionManager>;
 }
 
-impl<'a, 'b, 'c> SqliteRequestExtensions for Request<'a, 'b, 'c> {
+impl<'a, 'b> SqliteRequestExtensions for Request<'a, 'b> {
   fn db_conn(&self) -> PooledConnection<SqliteConnectionManager> {
     self.extensions().get::<SqliteMiddleware>().unwrap().get().unwrap()
   }
