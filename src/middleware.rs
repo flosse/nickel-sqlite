@@ -39,7 +39,7 @@ pub trait SqliteRequestExtensions {
   fn db_conn(&self) -> PooledConnection<SqliteConnectionManager>;
 }
 
-impl<'a, 'b> SqliteRequestExtensions for Request<'a, 'b> {
+impl<'a, 'b, D> SqliteRequestExtensions for Request<'a, 'b, D> {
   fn db_conn(&self) -> PooledConnection<SqliteConnectionManager> {
     self.extensions().get::<SqliteMiddleware>().unwrap().get().unwrap()
   }
