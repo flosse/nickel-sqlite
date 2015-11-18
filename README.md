@@ -4,6 +4,9 @@
 [SQLite](http://www.sqlite.org/) middleware for
 [nickel.rs](http://nickel.rs/).
 
+
+[![Build Status](https://travis-ci.org/flosse/nickel-sqlite.svg?branch=master)](https://travis-ci.org/flosse/nickel-sqlite)
+
 ## Installation
 
 Add `nickel_sqlite` to your `Cargo.toml`:
