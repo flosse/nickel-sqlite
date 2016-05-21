@@ -16,8 +16,10 @@
 //! extern crate r2d2;
 //! #[macro_use] extern crate nickel;
 //! extern crate nickel_sqlite;
+//! extern crate r2d2_sqlite;
 //!
-//! use r2d2::NopErrorHandler;
+//! use r2d2::{Pool, Config};
+//! use r2d2_sqlite::SqliteConnectionManager;
 //! use nickel::{Nickel, HttpRouter};
 //! use nickel_sqlite::{SqliteMiddleware, SqliteRequestExtensions};
 //!
@@ -35,22 +37,24 @@
 //!
 //! fn main() {
 //!
-//!   let mut app       = Nickel::new();
-//!   let db_url        = "file.db";
-//!   let err_handler   = Box::new(NopErrorHandler);
-//!   let sqlite        = SqliteMiddleware::new(&*db_url, 5, err_handler).unwrap();
-//!   let db            = sqlite.pool.clone().get().unwrap();
+//!   let mut app = Nickel::new();
+//!   let db_url  = "file.db";
+//!   let db_mgr  = SqliteConnectionManager::new(db_url.as_ref())
+//!                   .expect("Unable to connect to database");
+//!   let db_pool = Pool::new(Config::default(), db_mgr)
+//!                   .expect("Unable to initialize connection pool");
+//!   let db      = db_pool.clone().get().unwrap();
 //!
 //!   match db.execute(CREATE_TABLE, &[]) {
 //!     Ok(_)  => println!("created table 'person'"),
 //!     Err(_) => {} // handle err
 //!   };
 //!
-//!   app.utilize(sqlite);
+//!   app.utilize(SqliteMiddleware::new(db_pool));
 //!
 //!   app.get("/persons/new/:name", middleware! { |req|
 //!     let name = req.param("name").unwrap();
-//!     let db = req.db_conn();
+//!     let db = req.db_conn().unwrap();
 //!     match db.execute("INSERT INTO person (name) VALUES ($1)", &[&name]) {
 //!       Ok(_)    => format!("Sucessfully created an entry"),
 //!       Err(err) => format!("Could not create a new entry: {}", err)
@@ -58,7 +62,7 @@
 //!   });
 //!
 //!   app.get("/persons", middleware! { |request|
-//!     let db = request.db_conn();
+//!     let db = request.db_conn().unwrap();
 //!     let mut stmt = db.prepare("SELECT id, name FROM person").unwrap();
 //!     let person_iter = stmt.query_map(&[], |row| {
 //!       Person{

@@ -1,32 +1,21 @@
-use std::sync::Arc;
-use std::error::Error as StdError;
-
+use std::result::Result;
 use nickel::{Request, Response, Middleware, Continue, MiddlewareResult};
-use r2d2_sqlite::{SqliteConnectionManager};
-use r2d2::{Pool, HandleError, Config, PooledConnection};
+use r2d2_sqlite::SqliteConnectionManager;
+use r2d2::{Pool, PooledConnection, GetTimeout};
 use typemap::Key;
-use plugin::{Pluggable, Extensible};
+use plugin::Extensible;
 
 pub struct SqliteMiddleware {
-  pub pool: Arc<Pool<SqliteConnectionManager>>
+  pub pool: Pool<SqliteConnectionManager>
 }
 
 impl SqliteMiddleware {
-  pub fn new(connect_str: &str,
-             num_connections: u32,
-             error_handler: Box<HandleError<::r2d2_sqlite::Error>>)
-               -> Result<SqliteMiddleware, Box<StdError>> {
-      let config = Config::builder()
-        .pool_size(num_connections)
-        .error_handler(error_handler)
-        .build();
-      let manager = try!(SqliteConnectionManager::new(connect_str));
-      let pool = try!(Pool::new(config, manager));
-      Ok(SqliteMiddleware { pool: Arc::new(pool) })
+  pub fn new(pool: Pool<SqliteConnectionManager>) -> SqliteMiddleware {
+    SqliteMiddleware { pool: pool }
   }
 }
 
-impl Key for SqliteMiddleware { type Value = Arc<Pool<SqliteConnectionManager>>; }
+impl Key for SqliteMiddleware { type Value = Pool<SqliteConnectionManager>; }
 
 impl<D> Middleware<D> for SqliteMiddleware {
   fn invoke<'a>(&self, req: &mut Request<D>, res: Response<'a, D>) -> MiddlewareResult<'a, D> {
@@ -36,11 +25,11 @@ impl<D> Middleware<D> for SqliteMiddleware {
 }
 
 pub trait SqliteRequestExtensions {
-  fn db_conn(&self) -> PooledConnection<SqliteConnectionManager>;
+  fn db_conn(&self) -> Result<PooledConnection<SqliteConnectionManager>, GetTimeout>;
 }
 
 impl<'a, 'b, D> SqliteRequestExtensions for Request<'a, 'b, D> {
-  fn db_conn(&self) -> PooledConnection<SqliteConnectionManager> {
-    self.extensions().get::<SqliteMiddleware>().unwrap().get().unwrap()
+  fn db_conn(&self) -> Result<PooledConnection<SqliteConnectionManager>, GetTimeout> {
+    self.extensions().get::<SqliteMiddleware>().unwrap().get()
   }
 }
