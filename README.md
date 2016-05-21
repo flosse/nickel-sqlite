@@ -6,6 +6,7 @@
 
 
 [![Build Status](https://travis-ci.org/flosse/nickel-sqlite.svg?branch=master)](https://travis-ci.org/flosse/nickel-sqlite)
+[![Latest Version](https://img.shields.io/crates/v/nickel_sqlite.svg)](https://crates.io/crates/https://crates.io/crates/nickel_sqlite)
 
 ## Installation
 
