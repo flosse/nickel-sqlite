@@ -39,18 +39,15 @@
 //!
 //!   let mut app = Nickel::new();
 //!   let db_url  = "file.db";
-//!   let db_mgr  = SqliteConnectionManager::new(db_url.as_ref())
-//!                   .expect("Unable to connect to database");
-//!   let db_pool = Pool::new(Config::default(), db_mgr)
-//!                   .expect("Unable to initialize connection pool");
-//!   let db      = db_pool.clone().get().unwrap();
+//!   let mw      = SqliteMiddleware::new(&db_url).expect("Unable to connect to database");
+//!   let db      = mw.pool.clone().get().unwrap();
 //!
 //!   match db.execute(CREATE_TABLE, &[]) {
 //!     Ok(_)  => println!("created table 'person'"),
-//!     Err(_) => {} // handle err
+//!     Err(_) => {} // handle error
 //!   };
 //!
-//!   app.utilize(SqliteMiddleware::new(db_pool));
+//!   app.utilize(mw);
 //!
 //!   app.get("/persons/new/:name", middleware! { |req|
 //!     let name = req.param("name").unwrap();

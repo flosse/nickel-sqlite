@@ -3,6 +3,8 @@ extern crate r2d2;
 extern crate nickel_sqlite;
 extern crate r2d2_sqlite;
 
+use r2d2::{Pool, Config};
+use r2d2_sqlite::SqliteConnectionManager;
 use nickel::{Nickel, HttpRouter};
 use nickel_sqlite::{SqliteMiddleware, SqliteRequestExtensions};
 
@@ -22,15 +24,18 @@ fn main() {
 
   let mut app = Nickel::new();
   let db_url  = "file.db";
-  let mw      = SqliteMiddleware::new(&db_url).expect("Unable to connect to database");
-  let db      = mw.pool.clone().get().unwrap();
+  let db_mgr  = SqliteConnectionManager::new(db_url.as_ref())
+                  .expect("Unable to connect to database");
+  let db_pool = Pool::new(Config::default(), db_mgr)
+                  .expect("Unable to initialize connection pool");
+  let db      = db_pool.clone().get().unwrap();
 
   match db.execute(CREATE_TABLE, &[]) {
     Ok(_)  => println!("created table 'person'"),
-    Err(_) => {} // handle error
+    Err(_) => {} // handle err
   };
 
-  app.utilize(mw);
+  app.utilize(SqliteMiddleware::with_pool(db_pool));
 
   app.get("/persons/new/:name", middleware! { |req|
     let name = req.param("name").unwrap();

@@ -1,7 +1,9 @@
+use std::error::Error;
 use std::result::Result;
 use nickel::{Request, Response, Middleware, Continue, MiddlewareResult};
+use nickel::status::StatusCode;
 use r2d2_sqlite::SqliteConnectionManager;
-use r2d2::{Pool, PooledConnection, GetTimeout};
+use r2d2::{Config, Pool, PooledConnection, GetTimeout};
 use typemap::Key;
 use plugin::Extensible;
 
@@ -10,7 +12,20 @@ pub struct SqliteMiddleware {
 }
 
 impl SqliteMiddleware {
-  pub fn new(pool: Pool<SqliteConnectionManager>) -> SqliteMiddleware {
+
+  /// Create middleware using defaults
+  ///
+  /// The middleware will be setup with the r2d2 defaults.
+  pub fn new(db_url: &str) -> Result<SqliteMiddleware, Box<Error>> {
+      let manager = try!(SqliteConnectionManager::new(db_url));
+      let pool = try!(Pool::new(Config::default(), manager));
+      Ok(SqliteMiddleware { pool: pool })
+  }
+
+  /// Create middleware using pre-built `r2d2::Pool`
+  ///
+  /// This allows the caller to create and configure the pool with specific settings.
+  pub fn with_pool(pool: Pool<SqliteConnectionManager>) -> SqliteMiddleware {
     SqliteMiddleware { pool: pool }
   }
 }
@@ -24,12 +39,30 @@ impl<D> Middleware<D> for SqliteMiddleware {
   }
 }
 
+/// Add `db_conn()` helper method to `nickel::Request`
+///
+/// This trait must only be used in conjunction with `SqliteMiddleware`.
+///
+/// On error, the method returns a tuple per Nickel convention.
+/// This allows the route to use the `try_with!` macro.
+///
+/// Example:
+///
+/// ```ignore
+/// app.get("/my_counter", middleware! { |request, response|
+/// 	let db = try_with!(response, request.db_conn());
+/// });
+/// ```
 pub trait SqliteRequestExtensions {
-  fn db_conn(&self) -> Result<PooledConnection<SqliteConnectionManager>, GetTimeout>;
+  fn db_conn(&self) -> Result<PooledConnection<SqliteConnectionManager>, (StatusCode, GetTimeout)>;
 }
 
 impl<'a, 'b, D> SqliteRequestExtensions for Request<'a, 'b, D> {
-  fn db_conn(&self) -> Result<PooledConnection<SqliteConnectionManager>, GetTimeout> {
-    self.extensions().get::<SqliteMiddleware>().unwrap().get()
+  fn db_conn(&self) -> Result<PooledConnection<SqliteConnectionManager>, (StatusCode, GetTimeout)> {
+    self.extensions()
+        .get::<SqliteMiddleware>()
+        .expect("SqliteMiddleware must be registered before using SqliteRequestExtensions")
+        .get()
+        .or_else(|err| Err((StatusCode::InternalServerError, err)))
   }
 }
