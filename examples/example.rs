@@ -57,5 +57,5 @@ fn main() {
     format!("<html><ul>{}</ul></html>", list)
   });
 
-  app.listen("127.0.0.1:6767");
+  app.listen("127.0.0.1:6767").unwrap();
 }

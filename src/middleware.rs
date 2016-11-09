@@ -17,7 +17,7 @@ impl SqliteMiddleware {
   ///
   /// The middleware will be setup with the r2d2 defaults.
   pub fn new(db_url: &str) -> Result<SqliteMiddleware, Box<Error>> {
-      let manager = try!(SqliteConnectionManager::new(db_url));
+      let manager = SqliteConnectionManager::new(db_url);
       let pool = try!(Pool::new(Config::default(), manager));
       Ok(SqliteMiddleware { pool: pool })
   }
