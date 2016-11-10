@@ -24,8 +24,7 @@ fn main() {
 
   let mut app = Nickel::new();
   let db_url  = "file.db";
-  let db_mgr  = SqliteConnectionManager::new(db_url.as_ref())
-                  .expect("Unable to connect to database");
+  let db_mgr  = SqliteConnectionManager::new(db_url.as_ref());
   let db_pool = Pool::new(Config::default(), db_mgr)
                   .expect("Unable to initialize connection pool");
   let db      = db_pool.clone().get().unwrap();
@@ -62,5 +61,5 @@ fn main() {
     format!("<html><ul>{}</ul></html>", list)
   });
 
-  app.listen("127.0.0.1:6767");
+  app.listen("127.0.0.1:6767").unwrap();
 }
