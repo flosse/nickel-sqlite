@@ -9,7 +9,7 @@ in rec {
     src = ./.;
     buildInputs = with pkgs; [
       pkgconfig
-      rustPlatform.rustc
+      rustc
       cargo
       sqlite
       openssl

@@ -4,9 +4,6 @@ matrix:
   - rust: nightly
   - rust: beta
   - rust: stable
-script:
-- cargo build
-- cargo test
 after_success: |
   [ $TRAVIS_BRANCH = master ] &&
   [ $TRAVIS_PULL_REQUEST = false ] &&
