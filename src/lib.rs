@@ -18,7 +18,7 @@
 //! extern crate nickel_sqlite;
 //! extern crate r2d2_sqlite;
 //!
-//! use r2d2::{Pool, Config};
+//! use r2d2::Pool;
 //! use r2d2_sqlite::SqliteConnectionManager;
 //! use nickel::{Nickel, HttpRouter};
 //! use nickel_sqlite::{SqliteMiddleware, SqliteRequestExtensions};
@@ -79,11 +79,11 @@
 //! ```
 
 extern crate nickel;
+extern crate plugin;
 extern crate r2d2;
 extern crate r2d2_sqlite;
-extern crate plugin;
 extern crate typemap;
 
-pub use middleware::{ SqliteMiddleware, SqliteRequestExtensions };
+pub use middleware::{SqliteMiddleware, SqliteRequestExtensions};
 
 mod middleware;
